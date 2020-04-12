@@ -67,37 +67,37 @@ let
          (baseName == "LICENSE") ||
          (type == "directory" && baseName != "dist"));
     };
-  overrides = pkgs: with pkgs.haskell.lib; {
+  misoOverlay = self: pkgs: with pkgs.haskell.lib; {
     pkgsCross = pkgs.pkgsCross // {
       iphone64 = pkgs.pkgsCross.iphone64 // {
         haskell = pkgs.pkgsCross.iphone64.haskell // {
           packages = pkgs.pkgsCross.iphone64.haskell.packages // {
             integer-simple = pkgs.pkgsCross.iphone64.haskell.packages.integer-simple // {
               ghc865 = pkgs.pkgsCross.iphone64.haskell.packages.integer-simple.ghc865.override {
-                overrides = self: super: {
-                  mkDerivation = args: super.mkDerivation (args // {
+                overrides = selfPkgs: superPkgs: {
+                  mkDerivation = args: superPkgs.mkDerivation (args // {
                     enableLibraryProfiling = false;
                     doCheck = false;
                     doHaddock = false;
                   });
-                  ghcjs-dom-jsaddle = self.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
-                  ghcjs-dom-jsffi = self.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
-                  ghcjs-dom = self.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
-                  jsaddle = self.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
-                  jsaddle-dom = self.callCabal2nix "jsaddle-dom" "${jsaddle-src}/jsaddle-dom" {};
-                  jsaddle-wkwebview = self.callCabal2nix "jsaddle-wkwebview" "${jsaddle-src}/jsaddle-wkwebview" {};
-                  servant = pkgs.lib.overrideDerivation (super.servant) (drv: {
+                  ghcjs-dom-jsaddle = selfPkgs.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
+                  ghcjs-dom-jsffi = selfPkgs.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
+                  ghcjs-dom = selfPkgs.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
+                  jsaddle = selfPkgs.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
+                  jsaddle-dom = selfPkgs.callCabal2nix "jsaddle-dom" "${jsaddle-src}/jsaddle-dom" {};
+                  jsaddle-wkwebview = selfPkgs.callCabal2nix "jsaddle-wkwebview" "${jsaddle-src}/jsaddle-wkwebview" {};
+                  servant = pkgs.lib.overrideDerivation (superPkgs.servant) (drv: {
                     postInstall = "";
                     postUnpack = ''
                       ${pkgs.gnused}/bin/sed -i '135d' servant*/servant.cabal
                       ${pkgs.gnused}/bin/sed -i '137d' servant*/servant.cabal
                     '';
                   });
-                  aeson = dontCheck super.aeson;
-                  QuickCheck = disableCabalFlag (super.QuickCheck) "templatehaskell";
-                  miso-examples-arm = self.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle -fios" {};
+                  aeson = dontCheck superPkgs.aeson;
+                  QuickCheck = disableCabalFlag (superPkgs.QuickCheck) "templatehaskell";
+                  miso-examples-arm = selfPkgs.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle -fios" {};
                   miso = pkgs.lib.overrideDerivation
-                    (self.callCabal2nixWithOptions "miso" miso-src-filter "-fjsaddle -fios" {})
+                    (selfPkgs.callCabal2nixWithOptions "miso" miso-src-filter "-fjsaddle -fios" {})
                     (drv: {
                       preConfigure =
                         let
@@ -115,9 +115,9 @@ let
     haskell = pkgs.haskell // {
       packages = pkgs.haskell.packages // {
         ghc864 = pkgs.haskell.packages.ghc864.override {
-          overrides = self: super: with pkgs.haskell.lib; {
-            happy = dontCheck (super.callHackage "happy" "1.19.9" {});
-            mkDerivation = args: super.mkDerivation (args // {
+          overrides = selfPkgs: superPkgs: with pkgs.haskell.lib; {
+            happy = dontCheck (superPkgs.callHackage "happy" "1.19.9" {});
+            mkDerivation = args: superPkgs.mkDerivation (args // {
               enableLibraryProfiling = false;
               doCheck = false;
               doHaddock = false;
@@ -125,33 +125,33 @@ let
           };
         };
         ghc865 = pkgs.haskell.packages.ghc865.override {
-          overrides = self: super: with pkgs.haskell.lib; rec {
-            jsaddle = self.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
-            jsaddle-dom = self.callCabal2nix "jsaddle-dom" jsaddle-dom-src {};
-            miso = self.callCabal2nix "miso" miso-src-filter {};
-            miso-jsaddle = self.callCabal2nixWithOptions "miso" miso-src-filter "-fjsaddle" {};
-            miso-examples-jsaddle = self.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle" { miso = miso-jsaddle; };
-            jsaddle-warp = dontCheck (self.callCabal2nix "jsaddle-warp" "${jsaddle-src}/jsaddle-warp" {});
-            webkit2gtk3-javascriptcore = self.callCabal2nix "webkit2gtk3-javascriptcore" webkit2gtk3-javascriptcore-src {};
-            jsaddle-webkit2gtk = self.callCabal2nix "jsaddle-webkit2gtk" "${jsaddle-src}/jsaddle-webkit2gtk" {};
-            ghcjs-dom-jsaddle = self.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
-            ghcjs-dom-jsffi = self.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
-            ghcjs-dom = self.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
+          overrides = selfPkgs: superPkgs: with pkgs.haskell.lib; rec {
+            jsaddle = selfPkgs.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
+            jsaddle-dom = selfPkgs.callCabal2nix "jsaddle-dom" jsaddle-dom-src {};
+            miso = selfPkgs.callCabal2nix "miso" miso-src-filter {};
+            miso-jsaddle = selfPkgs.callCabal2nixWithOptions "miso" miso-src-filter "-fjsaddle" {};
+            miso-examples-jsaddle = selfPkgs.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle" { miso = miso-jsaddle; };
+            jsaddle-warp = dontCheck (selfPkgs.callCabal2nix "jsaddle-warp" "${jsaddle-src}/jsaddle-warp" {});
+            webkit2gtk3-javascriptcore = selfPkgs.callCabal2nix "webkit2gtk3-javascriptcore" webkit2gtk3-javascriptcore-src {};
+            jsaddle-webkit2gtk = selfPkgs.callCabal2nix "jsaddle-webkit2gtk" "${jsaddle-src}/jsaddle-webkit2gtk" {};
+            ghcjs-dom-jsaddle = selfPkgs.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
+            ghcjs-dom-jsffi = selfPkgs.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
+            ghcjs-dom = selfPkgs.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
           };
         };
         ghcjs86 = pkgs.haskell.packages.ghcjs86.override {
-          overrides = self: super: with pkgs.haskell.lib; {
+          overrides = selfPkgs: superPkgs: with pkgs.haskell.lib; {
             inherit (pkgs.haskell.packages.ghc865) hpack;
-            jsaddle = self.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
-            jsaddle-dom = self.callCabal2nix "jsaddle-dom" jsaddle-dom-src {};
-            jsaddle-warp = dontCheck (self.callCabal2nix "jsaddle-warp" "${jsaddle-src}/jsaddle-warp" {});
-            jsaddle-webkit2gtk = self.callCabal2nix "jsaddle-webkit2gtk" "${jsaddle-src}/jsaddle-webkit2gtk" {};
-            ghcjs-dom-jsaddle = self.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
-            ghcjs-dom-jsffi = self.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
-            ghcjs-dom = self.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
-            mkDerivation = args: super.mkDerivation (args // { doCheck = false; });
+            jsaddle = selfPkgs.callCabal2nix "jsaddle" "${jsaddle-src}/jsaddle" {};
+            jsaddle-dom = selfPkgs.callCabal2nix "jsaddle-dom" jsaddle-dom-src {};
+            jsaddle-warp = dontCheck (selfPkgs.callCabal2nix "jsaddle-warp" "${jsaddle-src}/jsaddle-warp" {});
+            jsaddle-webkit2gtk = selfPkgs.callCabal2nix "jsaddle-webkit2gtk" "${jsaddle-src}/jsaddle-webkit2gtk" {};
+            ghcjs-dom-jsaddle = selfPkgs.callCabal2nix "ghcjs-dom-jsaddle" "${ghcjs-dom-src}/ghcjs-dom-jsaddle" {};
+            ghcjs-dom-jsffi = selfPkgs.callCabal2nix "ghcjs-dom-jsffi" "${ghcjs-dom-src}/ghcjs-dom-jsffi" {};
+            ghcjs-dom = selfPkgs.callCabal2nix "ghcjs-dom" "${ghcjs-dom-src}/ghcjs-dom" {};
+            mkDerivation = args: superPkgs.mkDerivation (args // { doCheck = false; });
             doctest = null;
-            miso-examples = (self.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle" {}).overrideDerivation (drv: {
+            miso-examples = (selfPkgs.callCabal2nixWithOptions "miso-examples" miso-examples-src-filter "-fjsaddle" {}).overrideDerivation (drv: {
               doHaddock = haddock;
               postInstall = ''
                 mkdir -p $out/bin/mario.jsexe/imgs
@@ -164,7 +164,7 @@ let
                 mv temp.js $out/bin/todo-mvc.jsexe/all.js
               '';
             });
-            miso = (self.callCabal2nixWithOptions "miso" miso-src-filter "-ftests" {}).overrideDerivation (drv: {
+            miso = (selfPkgs.callCabal2nixWithOptions "miso" miso-src-filter "-ftests" {}).overrideDerivation (drv: {
               doHaddock = haddock;
               postInstall = pkgs.lib.optionalString tests ''
                 ${closurecompiler}/bin/closure-compiler --compilation_level ADVANCED_OPTIMIZATIONS \
@@ -182,7 +182,7 @@ let
   pkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256;
-  }) { config.packageOverrides = overrides; config.allowUnfree = true; inherit overlays; };
+  }) { config.allowUnfree = true; overlays = [ misoOverlay ] ++ overlays; };
   more-examples = import ./nix/examples.nix pkgs;
   uploadCoverage = pkgs.writeScriptBin "upload-coverage.sh" ''
     #!/usr/bin/env bash
